@@ -7,6 +7,8 @@ services:
       - "3000:80"
     depends_on:
       - backend
+    networks:
+      - app-network
 
   backend:
     build: ./MyVendor.Ticket
@@ -15,13 +17,16 @@ services:
     volumes:
       - ./MyVendor.Ticket:/var/www/html
     environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: ticket
-      DB_USERNAME: yasu
-      DB_PASSWORD: pass
+      TKT_DB_HOST: mysql
+      TKT_DB_PORT: 3306
+      TKT_DB_NAME: ticket
+      TKT_DB_USER: root
+      TKT_DB_PASS: root
+      TKT_DB_DSN: "mysql:host=mysql;port=3306;dbname=ticket;charset=utf8"
     depends_on:
       - mysql
+    networks:
+      - app-network
 
   mysql:
     image: mysql:8.2
@@ -30,13 +35,18 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: ticket
-      MYSQL_USER: yasu
-      MYSQL_PASSWORD: pass
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
 
 volumes:
   mysql_data:
+
+networks:
+  app-network:
 
