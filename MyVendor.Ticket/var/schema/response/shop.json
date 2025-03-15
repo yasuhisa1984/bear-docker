@@ -1,0 +1,236 @@
+{
+  "$id": "shop.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shop",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "The unique identifier for a Shop.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "group_id": {
+      "description": "Group ID associated with the shop.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "agency_id": {
+      "description": "Primary agency ID.",
+      "type": "integer",
+      "minimum": 0,
+      "nullable": true
+    },
+    "secondary_agency_id": {
+      "description": "Secondary agency ID.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "connect_agency_id": {
+      "description": "Connection fee agency ID.",
+      "type": "integer",
+      "minimum": 0,
+      "nullable": true
+    },
+    "manage_code_id": {
+      "description": "Management code ID for accounting.",
+      "type": "integer",
+      "minimum": 0,
+      "nullable": true
+    },
+    "name": {
+      "description": "Shop name.",
+      "type": "string",
+      "maxLength": 255
+    },
+    "name_kn": {
+      "description": "Shop name in Kana.",
+      "type": "string",
+      "maxLength": 255,
+      "nullable": true
+    },
+    "tel": {
+      "description": "Shop telephone number.",
+      "type": "string",
+      "maxLength": 16,
+      "nullable": true
+    },
+    "fax": {
+      "description": "Shop fax number.",
+      "type": "string",
+      "maxLength": 16,
+      "nullable": true
+    },
+    "zipcode": {
+      "description": "Postal code.",
+      "type": "string",
+      "pattern": "^[0-9]{7}$",
+      "nullable": true
+    },
+    "pref_code": {
+      "description": "Prefecture code.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 47,
+      "nullable": true
+    },
+    "address": {
+      "description": "Shop address.",
+      "type": "string",
+      "maxLength": 255,
+      "nullable": true
+    },
+    "station": {
+      "description": "Nearest station.",
+      "type": "string",
+      "maxLength": 128,
+      "nullable": true
+    },
+    "chief": {
+      "description": "Shop chief's name.",
+      "type": "string",
+      "maxLength": 128,
+      "nullable": true
+    },
+    "company_chief": {
+      "description": "Company's chief name.",
+      "type": "string",
+      "maxLength": 128,
+      "nullable": true
+    },
+    "account_notification_date": {
+      "description": "Account notification date.",
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "contract_date": {
+      "description": "Contract signing date.",
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "bm_plan_division": {
+      "description": "BM Plan division (1: ENTRY, 2: BASIC, 3: ADVANCE).",
+      "type": "integer",
+      "minimum": 0
+    },
+    "start_date": {
+      "description": "Shop start date.",
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "option_start_date": {
+      "description": "Optional plan start date.",
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "performance_based_reward_date": {
+      "description": "Performance-based reward date.",
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "finish_date": {
+      "description": "Shop closure date.",
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "system_shutdown_date": {
+      "description": "System shutdown date.",
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "bm_cancellation_reason_note": {
+      "description": "BM cancellation reason note.",
+      "type": "string",
+      "nullable": true
+    },
+    "fee_initial": {
+      "description": "Initial fee.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "fee_monthly": {
+      "description": "Monthly fee.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "fee_connect": {
+      "description": "Connection fee.",
+      "type": "integer",
+      "minimum": 0,
+      "nullable": true
+    },
+    "fee_option": {
+      "description": "Optional fee.",
+      "type": "integer",
+      "minimum": 0,
+      "nullable": true
+    },
+    "fee_half_flag": {
+      "description": "Half billing flag (0: No, 1: Yes).",
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "ticket_use_flag": {
+      "description": "Ticket usage flag (0: No, 1: Yes).",
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "plan_use_flag": {
+      "description": "Plan usage flag (0: No, 1: Yes).",
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "purchase_details_use_flag": {
+      "description": "Purchase details usage flag (0: No, 1: Yes).",
+      "type": "integer",
+      "enum": [0, 1]
+    },
+    "commission": {
+      "description": "Product commission (percentage).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "commission_ticket_monthly": {
+      "description": "Monthly ticket commission.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "commission_ticket_times": {
+      "description": "Ticket commission per use.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "commission_plan": {
+      "description": "Plan commission.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "ec_memo": {
+      "description": "EC billing memo.",
+      "type": "string",
+      "nullable": true
+    },
+    "bills_memo": {
+      "description": "Billing memo.",
+      "type": "string",
+      "nullable": true
+    },
+    "bills_status": {
+      "description": "Billing status.",
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": ["id", "group_id", "name", "fee_initial", "fee_monthly", "bm_plan_division"]
+}
+
