@@ -1,30 +1,25 @@
+# MyVendor.Ticket/Dockerfile
 FROM php:8.3-fpm
 
-# 必要なパッケージをインストール（Nginx 追加 + bash-completion + Vim）
+# 作業ディレクトリの設定
+WORKDIR /var/www/html
+
+# 必要なパッケージとPHP拡張のインストール
 RUN apt-get update && apt-get install -y \
-    nginx \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
     unzip \
     git \
-    vim \
-    bash-completion \
-    supervisor \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql gd
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install pdo_mysql gd
 
-# 作業ディレクトリ
-WORKDIR /var/www/html
-
-# プロジェクトファイルをコピー
+# アプリケーションコードをイメージ内にコピー
 COPY . /var/www/html
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Bash の補完を有効化
-RUN echo "source /usr/share/bash-completion/bash_completion" >> ~/.bashrc
+# php-fpm はデフォルトでポート9000で待ち受けるので、必要に応じてEXPOSE
+EXPOSE 9000
 
-# Supervisor を使って Nginx と PHP-FPM を同時に起動
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# コンテナ起動時にPHP-FPMを実行
+CMD ["php-fpm"]
 
