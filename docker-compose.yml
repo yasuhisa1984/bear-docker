@@ -1,19 +1,28 @@
 version: '3.8'
 
 services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - php-fpm
+    volumes:
+      - ./MyVendor.Ticket:/var/www/html:ro
+    networks:
+      - app-network
+
   frontend:
     build: ./createxyz-project
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      - php-fpm
     networks:
       - app-network
 
-  backend:
-    build: ./MyVendor.Ticket
-    ports:
-      - "8080:80"
+  php-fpm:
+    build: ./php-fpm
     volumes:
       - ./MyVendor.Ticket:/var/www/html
     environment:
@@ -23,8 +32,6 @@ services:
       TKT_DB_USER: root
       TKT_DB_PASS: root
       TKT_DB_DSN: "mysql:host=mysql;port=3306;dbname=ticket;charset=utf8"
-    depends_on:
-      - mysql
     networks:
       - app-network
 
@@ -44,6 +51,11 @@ services:
     networks:
       - app-network
 
+  # bearsunday:
+  #   build: ./MyVendor.Ticket  # 必要に応じて、こちらもビルド方式に変更できます。現状の用途に合わせてください。
+  #   networks:
+  #     - app-network
+  #
 volumes:
   mysql_data:
 
