@@ -14,7 +14,7 @@ TKT_DB_SLAVE=''
 TKT_DB_DSN="mysql:host=${TKT_DB_HOST};dbname=${TKT_DB_NAME};"
 
 システム構成図
-
+```
 ┌────────────────────────────┐
 │       Client Browser       │
 │  (例: http://localhost)    │
@@ -50,6 +50,7 @@ TKT_DB_DSN="mysql:host=${TKT_DB_HOST};dbname=${TKT_DB_NAME};"
 │      (mysql:8.2)           │
 │  - データベース処理         │
 └────────────────────────────┘
+```
 
 注意点
 
