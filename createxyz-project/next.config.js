@@ -11,7 +11,7 @@ const nextConfig = {
     return [
       {
         source: '/api/shops',
-        destination: 'http://localhost:8080/shops' // bearsunday の正しいURLに置き換えてください
+	destination: 'http://localhost/api/shops' // nginxがフロントエンド内でapiをリダイレクト
       },
     ];
   },

@@ -1,5 +1,6 @@
 {
   "family": "bear-app",
+  "taskRoleArn": "arn:aws:iam::277677909587:role/ecsTaskExecutionRole",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "executionRoleArn": "arn:aws:iam::277677909587:role/ecsTaskExecutionRole",
@@ -7,34 +8,12 @@
   "memory": "8192",
   "containerDefinitions": [
     {
-      "name": "mysql",
-      "image": "277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/mysql-custom:latest",
-      "portMappings": [{ "containerPort": 3306, "protocol": "tcp" }],
+      "name": "bear-docker-fpm-nginx",
+      "image": "277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest",
+      "portMappings": [{ "containerPort": 8080, "protocol": "tcp" }],
       "essential": true,
       "environment": [
-        { "name": "MYSQL_ROOT_PASSWORD", "value": "root" },
-        { "name": "MYSQL_DATABASE", "value": "ticket" },
-        { "name": "MYSQL_USER", "value": "root" },
-        { "name": "MYSQL_PASSWORD", "value": "root" }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/aws/ecs/bear-service",
-          "awslogs-region": "ap-northeast-1",
-          "awslogs-stream-prefix": "mysql"
-        }
-      },
-      "cpu": 1024,
-      "memory": 2048
-    },
-    {
-      "name": "php-fpm",
-      "image": "277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm:latest",
-      "portMappings": [{ "containerPort": 9000, "protocol": "tcp" }],
-      "essential": true,
-      "environment": [
-        { "name": "TKT_DB_HOST", "value": "mysql" },
+        { "name": "TKT_DB_HOST", "value": "localhost" },
         { "name": "TKT_DB_PORT", "value": "3306" },
         { "name": "TKT_DB_NAME", "value": "ticket" },
         { "name": "TKT_DB_USER", "value": "root" },
@@ -45,7 +24,7 @@
         "options": {
           "awslogs-group": "/aws/ecs/bear-service",
           "awslogs-region": "ap-northeast-1",
-          "awslogs-stream-prefix": "php-fpm"
+          "awslogs-stream-prefix": "php-fpm-nginx"
         }
       },
       "cpu": 1024,
@@ -53,7 +32,7 @@
     },
     {
       "name": "frontend",
-      "image": "277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-frontend:latest",
+      "image": "277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-frontend@sha256:009d39d388ea49c8a6b54fb4e4fba8b8fe65035c33d92ded7a7f899383f4078b",
       "portMappings": [{ "containerPort": 3000, "protocol": "tcp" }],
       "essential": true,
       "logConfiguration": {
@@ -68,20 +47,27 @@
       "memory": 1024
     },
     {
-      "name": "nginx",
-      "image": "277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-nginx:latest",
-      "portMappings": [{ "containerPort": 80, "protocol": "tcp" }],
+      "name": "mysql",
+      "image": "277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/finaltest@sha256:9c12f63ec68c81ddc9e1e1e2fece855bb1a876f011e68814273c4eb539e426d4",
+      "portMappings": [
+        {
+          "containerPort": 3306,
+          "protocol": "tcp"
+        }
+      ],
       "essential": true,
+      "environment": [
+        { "name": "MYSQL_ROOT_PASSWORD", "value": "root" },
+        { "name": "MYSQL_DATABASE", "value": "ticket" }
+      ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/aws/ecs/bear-service",
           "awslogs-region": "ap-northeast-1",
-          "awslogs-stream-prefix": "nginx"
+          "awslogs-stream-prefix": "mysql"
         }
-      },
-      "cpu": 512,
-      "memory": 1024
+      }
     }
   ]
 }

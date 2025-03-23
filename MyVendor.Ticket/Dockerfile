@@ -1,27 +1,36 @@
-# MyVendor.Ticket/Dockerfile
 FROM php:8.3-fpm
 
-# 作業ディレクトリの設定
 WORKDIR /var/www/html
 
-# 必要なパッケージとPHP拡張のインストール
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
+# 必要なパッケージをインストール + Composer のインストール
+RUN apt-get update && apt-get install -y \
+    nginx \
     libpng-dev \
     libjpeg-dev \
-    libjpeg62-turbo-dev \
-    libfreetype-dev \
+    libfreetype6-dev \
     unzip \
     git \
-  && docker-php-ext-configure gd --with-freetype=/usr/include/freetype2 --with-jpeg \
+    curl \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install pdo_mysql gd \
-  && rm -rf /var/lib/apt/lists/*
-# アプリケーションコードをイメージ内にコピー
+  && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# ソースコード・設定ファイルのコピー
 COPY . /var/www/html
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# php-fpm はデフォルトでポート9000で待ち受けるので、必要に応じてEXPOSE
-EXPOSE 9000
+# Composer の依存パッケージをインストール（スクリプト実行を抑制）
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# コンテナ起動時にPHP-FPMを実行
-CMD ["php-fpm"]
+# 必要なディレクトリを作成し、書き込み権限を付与する
+RUN mkdir -p /var/www/html/var/tmp/hal-api-app \
+    && mkdir -p /var/www/html/var/log/hal-api-app \
+    && chown -R www-data:www-data /var/www/html/var \
+    && chmod -R 777 /var/www/html/var
+
+# ポートを公開する
+EXPOSE 8080 9000
+
+# PHP-FPM と Nginx を起動するコマンド
+CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
 
