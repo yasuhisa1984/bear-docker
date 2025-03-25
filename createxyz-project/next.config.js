@@ -11,7 +11,7 @@ const nextConfig = {
     return [
       {
         source: '/api/shops',
-	destination: 'http://localhost/api/shops' // nginxがフロントエンド内でapiをリダイレクト
+        destination: 'http://localhost/api/shops' // nginxがフロントエンド内でapiをリダイレクト
       },
     ];
   },
