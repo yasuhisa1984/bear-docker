@@ -10,7 +10,8 @@ class Shops extends ResourceObject
         return [
             'shops' => [
                 ['id' => 1, 'name' => 'Shop A'],
-                ['id' => 2, 'name' => 'Shop B']
+                ['id' => 2, 'name' => 'Shop B'],
+                ['id' => 3, 'name' => 'Shop C']
             ]
         ];
     }

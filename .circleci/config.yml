@@ -1,35 +1,125 @@
-# This config was automatically generated from your source code
-# Stacks detected: deps:node:createxyz-project,deps:php:MyVendor.Ticket,package_manager:yarn:
-   #       - build-node
 version: 2.1
 
 executors:
-  php_executor:
+  php_node_executor:
     docker:
-      - image: cimg/php:8.3  # PHP 8.3 環境
+      - image: cimg/php:8.3-node
+    working_directory: ~/project
+
+  node_executor:
+    docker:
+      - image: cimg/node:18.20
     working_directory: ~/project
 
 jobs:
   test-backend:
-    executor: php_executor
+    executor: php_node_executor
     steps:
-      - checkout  # GitHubリポジトリのコードを取得
-
+      - checkout
       - run:
           name: Install Composer dependencies
           working_directory: MyVendor.Ticket
           command: |
             curl -sS https://getcomposer.org/installer | php
             php composer.phar install --no-scripts
-
       - run:
-          name: Run Bear.Sunday PHPUnit tests
+          name: Run PHPUnit tests
           working_directory: MyVendor.Ticket
           command: ./vendor/bin/phpunit --testdox
 
+  push-frontend:
+    executor: node_executor
+    steps:
+      - checkout
+
+      - run:
+          name: Assume IAM Role via OIDC and login to ECR
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq awscli curl
+
+            # 1) JWT をファイルに書き出す
+            echo "$CIRCLE_OIDC_TOKEN" > /tmp/oidc_token
+
+            # 2) Web Identity Token に file:// を付けて渡す
+            creds=$(aws sts assume-role-with-web-identity \
+              --role-arn arn:aws:iam::277677909587:role/ECRPushDocker \
+              --role-session-name circleci-session \
+              --web-identity-token file:///tmp/oidc_token \
+              --duration-seconds 900
+            )
+
+            export AWS_ACCESS_KEY_ID=$(echo "$creds" | jq -r .Credentials.AccessKeyId)
+            export AWS_SECRET_ACCESS_KEY=$(echo "$creds" | jq -r .Credentials.SecretAccessKey)
+            export AWS_SESSION_TOKEN=$(echo "$creds" | jq -r .Credentials.SessionToken)
+
+            aws ecr get-login-password --region ap-northeast-1 | \
+              docker login --username AWS --password-stdin 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com
+
+      - setup_remote_docker
+
+      - run:
+          name: Build & push Nuxt Docker image
+          command: |
+            echo "=== Decoding OIDC Token (frontend) ==="
+            echo "$CIRCLE_OIDC_TOKEN" | cut -d '.' -f2 | base64 -d | jq .
+            docker build -t bear-docker-frontend ./createxyz-project
+            docker tag bear-docker-frontend 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-frontend:latest
+            docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-frontend:latest
+
+  build-and-push-backend:
+    executor: php_node_executor
+    steps:
+      - checkout
+
+      - run:
+          name: Assume IAM Role via OIDC and login to ECR
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq awscli curl
+
+            # 1) JWT をファイルに書き出す
+            echo "$CIRCLE_OIDC_TOKEN" > /tmp/oidc_token
+
+            # 2) Web Identity Token に file:// を付けて渡す
+            creds=$(aws sts assume-role-with-web-identity \
+              --role-arn arn:aws:iam::277677909587:role/ECRPushDocker \
+              --role-session-name circleci-session \
+              --web-identity-token file:///tmp/oidc_token \
+              --duration-seconds 900
+            )
+
+            export AWS_ACCESS_KEY_ID=$(echo "$creds" | jq -r .Credentials.AccessKeyId)
+            export AWS_SECRET_ACCESS_KEY=$(echo "$creds" | jq -r .Credentials.SecretAccessKey)
+            export AWS_SESSION_TOKEN=$(echo "$creds" | jq -r .Credentials.SessionToken)
+
+            aws ecr get-login-password --region ap-northeast-1 | \
+              docker login --username AWS --password-stdin 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com
+
+      - setup_remote_docker
+
+      - run:
+          name: Build & push BEAR.Sunday Docker image
+          command: |
+            echo "=== Decoding OIDC Token (backend) ==="
+            echo "$CIRCLE_OIDC_TOKEN" | cut -d '.' -f2 | base64 -d | jq .
+            docker build -t my-backend-app ./MyVendor.Ticket
+            docker tag my-backend-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
+            docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
+
+      - run:
+          name: Debug OIDC
+          command: |
+            echo "=== Checking OIDC token (backend final debug) ==="
+            echo "Token length: $(echo $CIRCLE_OIDC_TOKEN | wc -c)"
+            echo "$CIRCLE_OIDC_TOKEN" | cut -d "." -f2 | base64 -d | jq .
+
 workflows:
   version: 2
-  test:
+  test_and_deploy:
     jobs:
       - test-backend
-
+      - push-frontend:
+          requires:
+            - test-backend
+      - build-and-push-backend:
+          requires:
+            - test-backend
