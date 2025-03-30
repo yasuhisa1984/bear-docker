@@ -1,84 +1,35 @@
+# This config was automatically generated from your source code
+# Stacks detected: deps:node:createxyz-project,deps:php:MyVendor.Ticket,package_manager:yarn:
+   #       - build-node
 version: 2.1
 
 executors:
-  php_node_executor:
+  php_executor:
     docker:
-      - image: cimg/php:8.3-node
-    working_directory: ~/project
-
-  node_executor:
-    docker:
-      - image: cimg/node:18.20
+      - image: cimg/php:8.3  # PHP 8.3 環境
     working_directory: ~/project
 
 jobs:
   test-backend:
-    executor: php_node_executor
+    executor: php_executor
     steps:
-      - checkout
+      - checkout  # GitHubリポジトリのコードを取得
+
       - run:
           name: Install Composer dependencies
           working_directory: MyVendor.Ticket
           command: |
             curl -sS https://getcomposer.org/installer | php
             php composer.phar install --no-scripts
+
       - run:
-          name: Run PHPUnit tests
+          name: Run Bear.Sunday PHPUnit tests
           working_directory: MyVendor.Ticket
           command: ./vendor/bin/phpunit --testdox
 
-  build-and-push:
-    executor: node_executor
-    steps:
-      - checkout
-      - setup_remote_docker
-
-      - run:
-          name: Install deps & build Nuxt
-          working_directory: createxyz-project
-          command: |
-            npm install
-            npm run build
-
-      - run:
-          name: Assume IAM Role via OIDC and login to ECR
-          command: |
-            sudo apt-get update && sudo apt-get install -y jq awscli curl
-
-            # OIDC トークンを一時ファイルに保存
-            echo "$CIRCLE_OIDC_TOKEN" > /tmp/oidc_token
-
-            # 一時クレデンシャルを取得
-            creds=$(aws sts assume-role-with-web-identity \
-              --role-arn arn:aws:iam::277677909587:role/ECRPushDocker \
-              --role-session-name circleci-session \
-              --web-identity-token file:///tmp/oidc_token \
-              --duration-seconds 900)
-
-            export AWS_ACCESS_KEY_ID=$(echo $creds | jq -r .Credentials.AccessKeyId)
-            export AWS_SECRET_ACCESS_KEY=$(echo $creds | jq -r .Credentials.SecretAccessKey)
-            export AWS_SESSION_TOKEN=$(echo $creds | jq -r .Credentials.SessionToken)
-
-            # ECR にログイン
-            aws ecr get-login-password --region ap-northeast-1 | \
-              docker login --username AWS --password-stdin 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com
-
-      - run:
-          name: Build & push Docker image
-          command: |
-            docker build -t my-nuxt-app ./createxyz-project
-            docker tag my-nuxt-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
-            docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
-
 workflows:
   version: 2
-  test_and_deploy:
+  test:
     jobs:
       - test-backend
-      - build-and-push:
-          requires:
-            - test-backend
-          filters:
-            branches:
-              only: main
 
