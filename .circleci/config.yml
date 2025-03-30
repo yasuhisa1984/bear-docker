@@ -56,6 +56,8 @@ jobs:
       - run:
           name: Build & push Nuxt Docker image
           command: |
+            echo "Decode JWT payload:"
+            echo $CIRCLE_OIDC_TOKEN | cut -d '.' -f2 | base64 -d | jq .
             docker build -t my-nuxt-app ./createxyz-project
             docker tag my-nuxt-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
             docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
@@ -89,6 +91,8 @@ jobs:
       - run:
           name: Build & push BEAR.Sunday Docker image
           command: |
+            echo "Decode JWT payload:"
+            echo $CIRCLE_OIDC_TOKEN | cut -d '.' -f2 | base64 -d | jq .
             docker build -t my-backend-app ./MyVendor.Ticket
             docker tag my-backend-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
             docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
