@@ -29,7 +29,7 @@ function MainComponent() {
       try {
         const response = await fetch("/api/shops");
         if (!response.ok) {
-          throw new Error("ショップ情報の取得に失敗しました");
+          throw new Error("ショップ情報の取得に失敗しました。");
         }
         const data = await response.json();
         setAllShops(data.shops);
