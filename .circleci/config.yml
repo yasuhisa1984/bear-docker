@@ -44,31 +44,59 @@ jobs:
           name: Assume IAM Role via OIDC and login to ECR
           command: |
             sudo apt-get update && sudo apt-get install -y jq awscli curl
+            export AWS_WEB_IDENTITY_TOKEN_FILE=$CIRCLE_OIDC_TOKEN
 
-            # OIDC トークンを一時ファイルに保存
-            echo "$CIRCLE_OIDC_TOKEN" > /tmp/oidc_token
-
-            # 一時クレデンシャルを取得
             creds=$(aws sts assume-role-with-web-identity \
               --role-arn arn:aws:iam::277677909587:role/ECRPushDocker \
               --role-session-name circleci-session \
-              --web-identity-token file:///tmp/oidc_token \
+              --web-identity-token $AWS_WEB_IDENTITY_TOKEN_FILE \
               --duration-seconds 900)
 
             export AWS_ACCESS_KEY_ID=$(echo $creds | jq -r .Credentials.AccessKeyId)
             export AWS_SECRET_ACCESS_KEY=$(echo $creds | jq -r .Credentials.SecretAccessKey)
             export AWS_SESSION_TOKEN=$(echo $creds | jq -r .Credentials.SessionToken)
 
-            # ECR にログイン
             aws ecr get-login-password --region ap-northeast-1 | \
               docker login --username AWS --password-stdin 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com
 
       - run:
-          name: Build & push Docker image
+          name: Build & push Nuxt Docker image
           command: |
             docker build -t my-nuxt-app ./createxyz-project
             docker tag my-nuxt-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
             docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
+
+  build-and-push-backend:
+    executor: php_node_executor
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Assume IAM Role via OIDC and login to ECR
+          command: |
+            sudo apt-get update && sudo apt-get install -y jq awscli curl
+            export AWS_WEB_IDENTITY_TOKEN_FILE=$CIRCLE_OIDC_TOKEN
+
+            creds=$(aws sts assume-role-with-web-identity \
+              --role-arn arn:aws:iam::277677909587:role/ECRPushDocker \
+              --role-session-name circleci-session \
+              --web-identity-token $AWS_WEB_IDENTITY_TOKEN_FILE \
+              --duration-seconds 900)
+
+            export AWS_ACCESS_KEY_ID=$(echo $creds | jq -r .Credentials.AccessKeyId)
+            export AWS_SECRET_ACCESS_KEY=$(echo $creds | jq -r .Credentials.SecretAccessKey)
+            export AWS_SESSION_TOKEN=$(echo $creds | jq -r .Credentials.SessionToken)
+
+            aws ecr get-login-password --region ap-northeast-1 | \
+              docker login --username AWS --password-stdin 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com
+
+      - run:
+          name: Build & push BEAR.Sunday Docker image
+          command: |
+            docker build -t my-backend-app ./MyVendor.Ticket
+            docker tag my-backend-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
+            docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
 
 workflows:
   version: 2
@@ -78,7 +106,7 @@ workflows:
       - build-and-push:
           requires:
             - test-backend
-          filters:
-            branches:
-              only: main
+      - build-and-push-backend:
+          requires:
+            - test-backend
 
