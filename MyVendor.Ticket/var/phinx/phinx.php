@@ -10,6 +10,7 @@ $test = new PDO(getenv('TKT_DB_DSN') . '_test', getenv('TKT_DB_USER'), getenv('T
 return [
     'paths' => [
         'migrations' => __DIR__ . '/migrations',
+        'seeds' => 'var/phinx/seeds'
     ],
     'environments' => [
         'development' => [

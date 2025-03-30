@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Temporary VPC, Subnet, and Security Group for ECS Fargate test environment
+
+Resources:
+  TempVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: TempVPC
+    DeletionPolicy: Delete
+
+  TempSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TempVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: TempSubnet
+    DeletionPolicy: Delete
+
+  TempInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: TempIGW
+    DeletionPolicy: Delete
+
+  TempVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref TempVPC
+      InternetGatewayId: !Ref TempInternetGateway
+    DeletionPolicy: Delete
+
+  TempRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref TempVPC
+      Tags:
+        - Key: Name
+          Value: TempRouteTable
+    DeletionPolicy: Delete
+
+  TempRoute:
+    Type: AWS::EC2::Route
+    DependsOn: TempVPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref TempRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref TempInternetGateway
+    DeletionPolicy: Delete
+
+  TempSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+      - TempSubnet
+      - TempRouteTable
+    Properties:
+      SubnetId: !Ref TempSubnet
+      RouteTableId: !Ref TempRouteTable
+    DeletionPolicy: Delete
+
+  TempSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Temporary security group for ECS Fargate test
+      VpcId: !Ref TempVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9000
+          ToPort: 9000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 0
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: TempSecurityGroup
+    DeletionPolicy: Delete
+
