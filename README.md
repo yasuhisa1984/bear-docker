@@ -57,4 +57,4 @@ TKT_DB_DSN="mysql:host=${TKT_DB_HOST};dbname=${TKT_DB_NAME};"
 環境変数 .env の設定を正しく行わないと MySQL コンテナと疎通ができずにエラーとなります。
 
 各コンテナの通信は Docker Compose によって自動的に設定されますが、名前解決 (mysql) が正しく指定されているか確認してください。
-
+ 
