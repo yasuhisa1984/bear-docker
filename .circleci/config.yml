@@ -123,4 +123,3 @@ workflows:
       - build-and-push-backend:
           requires:
             - test-backend
-

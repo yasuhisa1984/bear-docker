@@ -1,0 +1,9 @@
+FROM mysql:8.2
+
+ENV MYSQL_ROOT_PASSWORD=root \
+    MYSQL_DATABASE=ticket \
+    MYSQL_USER=root \
+    MYSQL_PASSWORD=root
+
+EXPOSE 3306
+
