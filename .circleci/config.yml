@@ -36,17 +36,21 @@ jobs:
           name: Assume IAM Role via OIDC and login to ECR
           command: |
             sudo apt-get update && sudo apt-get install -y jq awscli curl
-            export AWS_WEB_IDENTITY_TOKEN_FILE=$CIRCLE_OIDC_TOKEN
 
+            # 1) JWT をファイルに書き出す
+            echo "$CIRCLE_OIDC_TOKEN" > /tmp/oidc_token
+
+            # 2) Web Identity Token に file:// を付けて渡す
             creds=$(aws sts assume-role-with-web-identity \
               --role-arn arn:aws:iam::277677909587:role/ECRPushDocker \
               --role-session-name circleci-session \
-              --web-identity-token $AWS_WEB_IDENTITY_TOKEN_FILE \
-              --duration-seconds 900)
+              --web-identity-token file:///tmp/oidc_token \
+              --duration-seconds 900
+            )
 
-            export AWS_ACCESS_KEY_ID=$(echo $creds | jq -r .Credentials.AccessKeyId)
-            export AWS_SECRET_ACCESS_KEY=$(echo $creds | jq -r .Credentials.SecretAccessKey)
-            export AWS_SESSION_TOKEN=$(echo $creds | jq -r .Credentials.SessionToken)
+            export AWS_ACCESS_KEY_ID=$(echo "$creds" | jq -r .Credentials.AccessKeyId)
+            export AWS_SECRET_ACCESS_KEY=$(echo "$creds" | jq -r .Credentials.SecretAccessKey)
+            export AWS_SESSION_TOKEN=$(echo "$creds" | jq -r .Credentials.SessionToken)
 
             aws ecr get-login-password --region ap-northeast-1 | \
               docker login --username AWS --password-stdin 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com
@@ -56,7 +60,8 @@ jobs:
       - run:
           name: Build & push Nuxt Docker image
           command: |
-            echo $CIRCLE_OIDC_TOKEN | cut -d '.' -f2 | base64 -d | jq .
+            echo "=== Decoding OIDC Token (frontend) ==="
+            echo "$CIRCLE_OIDC_TOKEN" | cut -d '.' -f2 | base64 -d | jq .
             docker build -t my-nuxt-app ./createxyz-project
             docker tag my-nuxt-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
             docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
@@ -70,17 +75,21 @@ jobs:
           name: Assume IAM Role via OIDC and login to ECR
           command: |
             sudo apt-get update && sudo apt-get install -y jq awscli curl
-            export AWS_WEB_IDENTITY_TOKEN_FILE=$CIRCLE_OIDC_TOKEN
 
+            # 1) JWT をファイルに書き出す
+            echo "$CIRCLE_OIDC_TOKEN" > /tmp/oidc_token
+
+            # 2) Web Identity Token に file:// を付けて渡す
             creds=$(aws sts assume-role-with-web-identity \
               --role-arn arn:aws:iam::277677909587:role/ECRPushDocker \
               --role-session-name circleci-session \
-              --web-identity-token $AWS_WEB_IDENTITY_TOKEN_FILE \
-              --duration-seconds 900)
+              --web-identity-token file:///tmp/oidc_token \
+              --duration-seconds 900
+            )
 
-            export AWS_ACCESS_KEY_ID=$(echo $creds | jq -r .Credentials.AccessKeyId)
-            export AWS_SECRET_ACCESS_KEY=$(echo $creds | jq -r .Credentials.SecretAccessKey)
-            export AWS_SESSION_TOKEN=$(echo $creds | jq -r .Credentials.SessionToken)
+            export AWS_ACCESS_KEY_ID=$(echo "$creds" | jq -r .Credentials.AccessKeyId)
+            export AWS_SECRET_ACCESS_KEY=$(echo "$creds" | jq -r .Credentials.SecretAccessKey)
+            export AWS_SESSION_TOKEN=$(echo "$creds" | jq -r .Credentials.SessionToken)
 
             aws ecr get-login-password --region ap-northeast-1 | \
               docker login --username AWS --password-stdin 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com
@@ -90,11 +99,18 @@ jobs:
       - run:
           name: Build & push BEAR.Sunday Docker image
           command: |
-            echo "Decode JWT payload:"
-            echo $CIRCLE_OIDC_TOKEN | cut -d '.' -f2 | base64 -d | jq .
+            echo "=== Decoding OIDC Token (backend) ==="
+            echo "$CIRCLE_OIDC_TOKEN" | cut -d '.' -f2 | base64 -d | jq .
             docker build -t my-backend-app ./MyVendor.Ticket
             docker tag my-backend-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
             docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-fpm-nginx:latest
+
+      - run:
+          name: Debug OIDC
+          command: |
+            echo "=== Checking OIDC token (backend final debug) ==="
+            echo "Token length: $(echo $CIRCLE_OIDC_TOKEN | wc -c)"
+            echo "$CIRCLE_OIDC_TOKEN" | cut -d "." -f2 | base64 -d | jq .
 
 workflows:
   version: 2
