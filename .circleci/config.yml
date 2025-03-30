@@ -62,9 +62,9 @@ jobs:
           command: |
             echo "=== Decoding OIDC Token (frontend) ==="
             echo "$CIRCLE_OIDC_TOKEN" | cut -d '.' -f2 | base64 -d | jq .
-            docker build -t my-nuxt-app ./createxyz-project
-            docker tag my-nuxt-app 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
-            docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/my-nuxt-app:latest
+            docker build -t bear-docker-frontend ./createxyz-project
+            docker tag bear-docker-frontend 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-frontend:latest
+            docker push 277677909587.dkr.ecr.ap-northeast-1.amazonaws.com/bear-docker-frontend:latest
 
   build-and-push-backend:
     executor: php_node_executor
